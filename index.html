@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>High-Quality Batch QR Generator</title>
+  <title>Dynamic Batch QR Generator</title>
   <script src="https://cdn.jsdelivr.net/npm/qrcode-generator/qrcode.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Able&display=swap" rel="stylesheet" />
   <style>
@@ -18,44 +18,54 @@
       box-sizing: border-box;
     }
     h1 {
-      font-size: 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       margin-bottom: 1rem;
+      font-size: 2rem;
     }
-    textarea,
-    input[type="file"] {
+    .byline {
+      font-weight: normal;
+      font-size: 0.7em;
+      color: #ccc;
+    }
+    .qr-entry {
+      background: #112b54;
+      padding: 1rem;
+      border-radius: 10px;
+      margin: 1rem auto;
+      max-width: 500px;
+    }
+    .qr-entry input[type="text"],
+    .qr-entry input[type="file"] {
       width: 100%;
-      max-width: 480px;
-      height: 110px;
-      margin: 0.7rem auto;
-      padding: 0.8rem;
-      font-size: 1.1rem;
-      border-radius: 8px;
+      margin: 0.5rem 0;
+      padding: 0.6rem;
+      font-size: 1rem;
+      border-radius: 6px;
       border: none;
-      box-sizing: border-box;
-      display: block;
     }
-    input[type="file"] {
-      height: auto;
-      cursor: pointer;
+    .qr-entry label {
+      display: block;
+      margin-top: 0.5rem;
+      text-align: left;
+    }
+    .qr-entry input[type="checkbox"] {
+      margin-left: 0.5rem;
     }
     button {
-      margin: 0.7rem 0.3rem;
-      padding: 0.9rem 1.6rem;
+      margin: 1rem;
+      padding: 0.8rem 1.6rem;
       font-size: 1.2rem;
       background-color: #1a3c70;
       color: white;
       border: none;
       border-radius: 8px;
       cursor: pointer;
-      min-width: 140px;
       transition: background-color 0.25s ease;
-      user-select: none;
-      -webkit-tap-highlight-color: transparent;
     }
-    button:hover,
-    button:focus {
+    button:hover {
       background-color: #2d5ca5;
-      outline: none;
     }
     canvas {
       display: none;
@@ -63,48 +73,61 @@
   </style>
 </head>
 <body>
-  <h1 style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-  <span>Batch QR Code Generator</span>
-  <span style="font-weight: normal; font-size: 0.7em; color: #ccc;">by SPACESTUDIOS</span>
-</h1>
+  <h1>
+    <span>Batch QR Code Generator</span>
+    <span class="byline">by SPACESTUDIOS</span>
+  </h1>
 
-  <p>Enter one URL per line:</p>
-  <textarea id="urlList" placeholder="https://example.com/page1&#10;https://example.com/page2"></textarea>
-
-  <p>Enter one filename per line (must match URLs count):</p>
-  <textarea id="filenameList" placeholder="Page1QR&#10;Page2QR"></textarea>
-
-  <p>Optional logo (applied to all QR codes):</p>
-  <input type="file" id="logoInput" accept="image/*" />
-
-  <button onclick="generateAll()">Generate &amp; Download</button>
+  <div id="entries"></div>
+  <button onclick="addEntry()">Add QR Code</button>
+  <button onclick="generateAll()">Generate &amp; Download All</button>
 
   <canvas id="hiddenCanvas" width="1024" height="1024"></canvas>
 
   <script>
+    let entryCount = 0;
+
+    function addEntry() {
+      const container = document.getElementById('entries');
+      const div = document.createElement('div');
+      div.className = 'qr-entry';
+      div.innerHTML = `
+        <label>URL:</label>
+        <input type="text" name="url" placeholder="https://example.com" />
+        <label>Filename:</label>
+        <input type="text" name="filename" placeholder="filename" />
+        <label>Logo:</label>
+        <input type="file" accept="image/*" name="logo" />
+        <label><input type="checkbox" name="applyAll"> Use this logo for all QR codes</label>
+      `;
+      container.appendChild(div);
+      entryCount++;
+    }
+
     async function generateAll() {
-      const urls = document.getElementById('urlList').value.trim().split('\n');
-      const names = document.getElementById('filenameList').value.trim().split('\n');
-      if (urls.length !== names.length) {
-        alert("Please enter the same number of URLs and filenames.");
-        return;
-      }
+      const entries = document.querySelectorAll('.qr-entry');
+      const canvas = document.getElementById("hiddenCanvas");
+      const ctx = canvas.getContext("2d");
 
-      const logoFile = document.getElementById("logoInput").files[0];
-      let logo = null;
-      if (logoFile) logo = await loadImage(logoFile);
+      let globalLogo = null;
+      for (let i = 0; i < entries.length; i++) {
+        const url = entries[i].querySelector('input[name="url"]').value.trim();
+        const filename = entries[i].querySelector('input[name="filename"]').value.trim() || `qr-${i + 1}`;
+        const logoFile = entries[i].querySelector('input[name="logo"]').files[0];
+        const applyAll = entries[i].querySelector('input[name="applyAll"]').checked;
 
-      for (let i = 0; i < urls.length; i++) {
-        const text = urls[i].trim();
-        const filename = names[i].trim() || `qr-${i + 1}`;
-        if (!text) continue;
+        if (!url) continue;
 
-        const canvas = document.getElementById("hiddenCanvas");
-        const ctx = canvas.getContext("2d");
+        if (applyAll && logoFile && !globalLogo) {
+          globalLogo = await loadImage(logoFile);
+        }
+
+        const logo = applyAll ? globalLogo : logoFile ? await loadImage(logoFile) : null;
+
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         const qr = qrcode(0, 'H');
-        qr.addData(text);
+        qr.addData(url);
         qr.make();
         const cellCount = qr.getModuleCount();
         const cellSize = 8;
@@ -127,17 +150,16 @@
           const cropSize = Math.min(logo.width, logo.height);
 
           ctx.fillStyle = "#fff";
-          ctx.fillRect(x, y, logoSize, logoSize); // white bg behind logo
+          ctx.fillRect(x, y, logoSize, logoSize);
           ctx.drawImage(logo, (logo.width - cropSize) / 2, (logo.height - cropSize) / 2, cropSize, cropSize, x, y, logoSize, logoSize);
         }
 
-        // Download image
         const link = document.createElement("a");
         link.download = filename + ".png";
         link.href = canvas.toDataURL("image/png");
         link.click();
 
-        await new Promise((r) => setTimeout(r, 250)); // small pause for smooth downloads
+        await new Promise((r) => setTimeout(r, 300));
       }
     }
 
@@ -152,6 +174,8 @@
         reader.readAsDataURL(file);
       });
     }
+
+    window.onload = () => addEntry();
   </script>
 </body>
 </html>
