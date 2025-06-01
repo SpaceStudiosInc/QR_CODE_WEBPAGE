@@ -50,13 +50,15 @@
     }
     .qr-entry input[type="text"],
     .qr-entry input[type="file"],
-    .qr-entry input[type="color"] {
+    .qr-entry input[type="color"],
+    textarea {
       width: 100%;
       margin: 0.5rem 0;
       padding: 0.6rem;
       font-size: 1rem;
       border-radius: 6px;
       border: none;
+      box-sizing: border-box;
     }
     .qr-entry label {
       display: block;
@@ -120,11 +122,15 @@
           <label>QR Background Color:</label>
           <input type="color" name="bgColor" value="#ffffff" />
         </div>
+        <div class="bulk-input">
+          <label>Paste URLs and filenames (comma-separated, one per line):</label>
+          <textarea rows="5" placeholder="https://example.com, qr_filename"></textarea>
+          <button onclick="parseBulkEntries(this)">Parse Entries</button>
+        </div>
         <div class="entries"></div>
         <button onclick="addEntry(this)">Add QR Entry</button>
       `;
       batchContainer.appendChild(batchDiv);
-      addEntry(batchDiv.querySelector('button'));
       batchCount++;
     }
 
@@ -145,6 +151,32 @@
       entriesDiv.appendChild(entryDiv);
     }
 
+    function parseBulkEntries(button) {
+      const batchDiv = button.closest('.batch');
+      const textarea = batchDiv.querySelector('textarea');
+      const lines = textarea.value.trim().split('\n');
+      const entriesDiv = batchDiv.querySelector('.entries');
+
+      for (const line of lines) {
+        const [url, filename] = line.split(',').map(s => s.trim());
+        if (!url) continue;
+
+        const entryDiv = document.createElement('div');
+        entryDiv.className = 'qr-entry';
+        entryDiv.innerHTML = `
+          <label>URL:</label>
+          <input type="text" name="url" value="${url}" />
+          <label>Filename:</label>
+          <input type="text" name="filename" value="${filename || 'qr'}" />
+          <label>Optional logo (overrides batch):</label>
+          <input type="file" accept="image/*" name="entryLogo" />
+        `;
+        entriesDiv.appendChild(entryDiv);
+      }
+
+      textarea.value = '';
+    }
+
     async function generateAll() {
       const canvas = document.getElementById("hiddenCanvas");
       const ctx = canvas.getContext("2d");
@@ -163,9 +195,13 @@
         }
 
         for (const entry of entries) {
-          const url = entry.querySelector('input[name="url"]').value.trim();
-          const filename = entry.querySelector('input[name="filename"]').value.trim() || 'qr';
-          const entryLogoFile = entry.querySelector('input[name="entryLogo"]').files[0];
+          const urlInput = entry.querySelector('input[name="url"]');
+          const filenameInput = entry.querySelector('input[name="filename"]');
+          if (!urlInput || !filenameInput) continue;
+
+          const url = urlInput.value.trim();
+          const filename = filenameInput.value.trim() || 'qr';
+          const entryLogoFile = entry.querySelector('input[name="entryLogo"]')?.files[0];
 
           if (!url) continue;
 
