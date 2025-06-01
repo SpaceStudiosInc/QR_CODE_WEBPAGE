@@ -1,40 +1,61 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>High-Quality Batch QR Generator</title>
   <script src="https://cdn.jsdelivr.net/npm/qrcode-generator/qrcode.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Able&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Able&display=swap" rel="stylesheet" />
   <style>
     body {
       font-family: 'Able', serif;
       background-color: #0b1e3f;
       color: #fff;
       text-align: center;
-      padding: 2rem;
+      padding: 1.5rem 1rem;
+      margin: 0;
+      min-height: 100vh;
+      box-sizing: border-box;
     }
-    textarea, input[type="file"] {
-      width: 90%;
-      max-width: 500px;
-      height: 100px;
-      margin: 0.5rem 0;
-      padding: 0.5rem;
-      font-size: 1rem;
-      border-radius: 5px;
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+    }
+    textarea,
+    input[type="file"] {
+      width: 100%;
+      max-width: 480px;
+      height: 110px;
+      margin: 0.7rem auto;
+      padding: 0.8rem;
+      font-size: 1.1rem;
+      border-radius: 8px;
       border: none;
+      box-sizing: border-box;
+      display: block;
+    }
+    input[type="file"] {
+      height: auto;
+      cursor: pointer;
     }
     button {
-      margin: 0.5rem;
-      padding: 0.6rem 1.2rem;
-      font-size: 1rem;
+      margin: 0.7rem 0.3rem;
+      padding: 0.9rem 1.6rem;
+      font-size: 1.2rem;
       background-color: #1a3c70;
       color: white;
       border: none;
-      border-radius: 6px;
+      border-radius: 8px;
       cursor: pointer;
+      min-width: 140px;
+      transition: background-color 0.25s ease;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
     }
-    button:hover {
+    button:hover,
+    button:focus {
       background-color: #2d5ca5;
+      outline: none;
     }
     canvas {
       display: none;
@@ -42,18 +63,22 @@
   </style>
 </head>
 <body>
-  <h1>Batch QR Code Generator (High Quality + Logo)</h1>
+  <h1 style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+  <span>Batch QR Code Generator</span>
+  <span style="font-weight: normal; font-size: 0.7em; color: #ccc;">by SPACESTUDIOS</span>
+</h1>
 
-  <p>One URL per line:</p>
+  <p>Enter one URL per line:</p>
   <textarea id="urlList" placeholder="https://example.com/page1&#10;https://example.com/page2"></textarea>
 
-  <p>One filename per line (same order):</p>
+  <p>Enter one filename per line (must match URLs count):</p>
   <textarea id="filenameList" placeholder="Page1QR&#10;Page2QR"></textarea>
 
-  <p>Optional logo (used on all QR codes):</p>
-  <input type="file" id="logoInput" accept="image/*" /><br>
+  <p>Optional logo (applied to all QR codes):</p>
+  <input type="file" id="logoInput" accept="image/*" />
 
-  <button onclick="generateAll()">Generate & Download</button>
+  <button onclick="generateAll()">Generate &amp; Download</button>
+
   <canvas id="hiddenCanvas" width="1024" height="1024"></canvas>
 
   <script>
@@ -61,7 +86,7 @@
       const urls = document.getElementById('urlList').value.trim().split('\n');
       const names = document.getElementById('filenameList').value.trim().split('\n');
       if (urls.length !== names.length) {
-        alert("Mismatch between number of URLs and filenames.");
+        alert("Please enter the same number of URLs and filenames.");
         return;
       }
 
@@ -81,56 +106,51 @@
         const qr = qrcode(0, 'H');
         qr.addData(text);
         qr.make();
+        const cellCount = qr.getModuleCount();
         const cellSize = 8;
-        const qrSize = qr.getModuleCount();
-        const scale = 1024 / (qrSize * cellSize);
-        const offset = (canvas.width - qrSize * cellSize * scale) / 2;
+        const scale = 1024 / (cellCount * cellSize);
+        const offset = (canvas.width - cellCount * cellSize * scale) / 2;
 
-        // Draw QR modules
         ctx.fillStyle = "#000";
-        for (let r = 0; r < qrSize; r++) {
-          for (let c = 0; c < qrSize; c++) {
+        for (let r = 0; r < cellCount; r++) {
+          for (let c = 0; c < cellCount; c++) {
             if (qr.isDark(r, c)) {
               ctx.fillRect(offset + c * cellSize * scale, offset + r * cellSize * scale, cellSize * scale, cellSize * scale);
             }
           }
         }
 
-        // Add logo if exists
         if (logo) {
           const logoSize = canvas.width * 0.2;
           const x = (canvas.width - logoSize) / 2;
           const y = (canvas.height - logoSize) / 2;
-
           const cropSize = Math.min(logo.width, logo.height);
+
           ctx.fillStyle = "#fff";
-          ctx.fillRect(x, y, logoSize, logoSize); // background white box
+          ctx.fillRect(x, y, logoSize, logoSize); // white bg behind logo
           ctx.drawImage(logo, (logo.width - cropSize) / 2, (logo.height - cropSize) / 2, cropSize, cropSize, x, y, logoSize, logoSize);
         }
 
-        // Download
+        // Download image
         const link = document.createElement("a");
         link.download = filename + ".png";
         link.href = canvas.toDataURL("image/png");
         link.click();
-        await delay(200); // Give browser time
+
+        await new Promise((r) => setTimeout(r, 250)); // small pause for smooth downloads
       }
     }
 
     function loadImage(file) {
       return new Promise((resolve) => {
         const reader = new FileReader();
-        reader.onload = e => {
+        reader.onload = (e) => {
           const img = new Image();
           img.onload = () => resolve(img);
           img.src = e.target.result;
         };
         reader.readAsDataURL(file);
       });
-    }
-
-    function delay(ms) {
-      return new Promise(resolve => setTimeout(resolve, ms));
     }
   </script>
 </body>
