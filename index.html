@@ -23,21 +23,34 @@
       align-items: center;
       margin-bottom: 1rem;
       font-size: 2rem;
+      flex-wrap: wrap;
     }
     .byline {
       font-weight: normal;
       font-size: 0.7em;
       color: #ccc;
     }
+    .batch-container {
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+    .batch {
+      background: #0f2a50;
+      border-radius: 12px;
+      padding: 1rem;
+      max-width: 700px;
+      margin: 0 auto;
+    }
     .qr-entry {
       background: #112b54;
       padding: 1rem;
       border-radius: 10px;
-      margin: 1rem auto;
-      max-width: 500px;
+      margin-bottom: 1rem;
     }
     .qr-entry input[type="text"],
-    .qr-entry input[type="file"] {
+    .qr-entry input[type="file"],
+    .qr-entry input[type="color"] {
       width: 100%;
       margin: 0.5rem 0;
       padding: 0.6rem;
@@ -53,8 +66,11 @@
     .qr-entry input[type="checkbox"] {
       margin-left: 0.5rem;
     }
+    .controls {
+      margin: 1.5rem auto;
+    }
     button {
-      margin: 1rem;
+      margin: 0.5rem;
       padding: 0.8rem 1.6rem;
       font-size: 1.2rem;
       background-color: #1a3c70;
@@ -74,92 +90,127 @@
 </head>
 <body>
   <h1>
-    <span>Batch QR Code Generator</span>
-    <span class="byline">by SPACESTUDIOS</span>
+    Batch QR Code Generator by SPACESTUDIOS
   </h1>
 
-  <div id="entries"></div>
-  <button onclick="addEntry()">Add QR Code</button>
-  <button onclick="generateAll()">Generate &amp; Download All</button>
+  <div class="controls">
+    <button onclick="addBatch()">Add Batch</button>
+    <button onclick="generateAll()">Generate & Download All</button>
+  </div>
+
+  <div id="batchContainer" class="batch-container"></div>
 
   <canvas id="hiddenCanvas" width="1024" height="1024"></canvas>
 
   <script>
-    let entryCount = 0;
+    let batchCount = 0;
 
-    function addEntry() {
-      const container = document.getElementById('entries');
-      const div = document.createElement('div');
-      div.className = 'qr-entry';
-      div.innerHTML = `
+    function addBatch() {
+      const batchContainer = document.getElementById('batchContainer');
+      const batchDiv = document.createElement('div');
+      batchDiv.className = 'batch';
+      batchDiv.innerHTML = `
+        <h3>Batch ${batchCount + 1}</h3>
+        <div class="qr-entry">
+          <label>Logo (optional):</label>
+          <input type="file" accept="image/*" name="batchLogo" />
+          <label><input type="checkbox" name="applyLogoToAll"> Use logo for all below</label>
+          <label>QR Foreground Color:</label>
+          <input type="color" name="qrColor" value="#000000" />
+          <label>QR Background Color:</label>
+          <input type="color" name="bgColor" value="#ffffff" />
+        </div>
+        <div class="entries"></div>
+        <button onclick="addEntry(this)">Add QR Entry</button>
+      `;
+      batchContainer.appendChild(batchDiv);
+      addEntry(batchDiv.querySelector('button'));
+      batchCount++;
+    }
+
+    function addEntry(button) {
+      const batchDiv = button.closest('.batch');
+      const entriesDiv = batchDiv.querySelector('.entries');
+
+      const entryDiv = document.createElement('div');
+      entryDiv.className = 'qr-entry';
+      entryDiv.innerHTML = `
         <label>URL:</label>
         <input type="text" name="url" placeholder="https://example.com" />
         <label>Filename:</label>
         <input type="text" name="filename" placeholder="filename" />
-        <label>Logo:</label>
-        <input type="file" accept="image/*" name="logo" />
-        <label><input type="checkbox" name="applyAll"> Use this logo for all QR codes</label>
+        <label>Optional logo (overrides batch):</label>
+        <input type="file" accept="image/*" name="entryLogo" />
       `;
-      container.appendChild(div);
-      entryCount++;
+      entriesDiv.appendChild(entryDiv);
     }
 
     async function generateAll() {
-      const entries = document.querySelectorAll('.qr-entry');
       const canvas = document.getElementById("hiddenCanvas");
       const ctx = canvas.getContext("2d");
 
-      let globalLogo = null;
-      for (let i = 0; i < entries.length; i++) {
-        const url = entries[i].querySelector('input[name="url"]').value.trim();
-        const filename = entries[i].querySelector('input[name="filename"]').value.trim() || `qr-${i + 1}`;
-        const logoFile = entries[i].querySelector('input[name="logo"]').files[0];
-        const applyAll = entries[i].querySelector('input[name="applyAll"]').checked;
+      const batches = document.querySelectorAll('.batch');
+      for (const batch of batches) {
+        const batchLogoFile = batch.querySelector('input[name="batchLogo"]').files[0];
+        const applyLogoToAll = batch.querySelector('input[name="applyLogoToAll"]').checked;
+        const entries = batch.querySelectorAll('.qr-entry');
+        const fgColor = batch.querySelector('input[name="qrColor"]').value;
+        const bgColor = batch.querySelector('input[name="bgColor"]').value;
 
-        if (!url) continue;
-
-        if (applyAll && logoFile && !globalLogo) {
-          globalLogo = await loadImage(logoFile);
+        let batchLogo = null;
+        if (applyLogoToAll && batchLogoFile) {
+          batchLogo = await loadImage(batchLogoFile);
         }
 
-        const logo = applyAll ? globalLogo : logoFile ? await loadImage(logoFile) : null;
+        for (const entry of entries) {
+          const url = entry.querySelector('input[name="url"]').value.trim();
+          const filename = entry.querySelector('input[name="filename"]').value.trim() || 'qr';
+          const entryLogoFile = entry.querySelector('input[name="entryLogo"]').files[0];
 
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+          if (!url) continue;
 
-        const qr = qrcode(0, 'H');
-        qr.addData(url);
-        qr.make();
-        const cellCount = qr.getModuleCount();
-        const cellSize = 8;
-        const scale = 1024 / (cellCount * cellSize);
-        const offset = (canvas.width - cellCount * cellSize * scale) / 2;
+          const logo = entryLogoFile ? await loadImage(entryLogoFile) : batchLogo;
 
-        ctx.fillStyle = "#000";
-        for (let r = 0; r < cellCount; r++) {
-          for (let c = 0; c < cellCount; c++) {
-            if (qr.isDark(r, c)) {
-              ctx.fillRect(offset + c * cellSize * scale, offset + r * cellSize * scale, cellSize * scale, cellSize * scale);
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+          const qr = qrcode(0, 'H');
+          qr.addData(url);
+          qr.make();
+          const cellCount = qr.getModuleCount();
+          const cellSize = 8;
+          const scale = 1024 / (cellCount * cellSize);
+          const offset = (canvas.width - cellCount * cellSize * scale) / 2;
+
+          ctx.fillStyle = bgColor;
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+          ctx.fillStyle = fgColor;
+          for (let r = 0; r < cellCount; r++) {
+            for (let c = 0; c < cellCount; c++) {
+              if (qr.isDark(r, c)) {
+                ctx.fillRect(offset + c * cellSize * scale, offset + r * cellSize * scale, cellSize * scale, cellSize * scale);
+              }
             }
           }
+
+          if (logo) {
+            const logoSize = canvas.width * 0.2;
+            const x = (canvas.width - logoSize) / 2;
+            const y = (canvas.height - logoSize) / 2;
+            const cropSize = Math.min(logo.width, logo.height);
+
+            ctx.fillStyle = bgColor;
+            ctx.fillRect(x, y, logoSize, logoSize);
+            ctx.drawImage(logo, (logo.width - cropSize) / 2, (logo.height - cropSize) / 2, cropSize, cropSize, x, y, logoSize, logoSize);
+          }
+
+          const link = document.createElement("a");
+          link.download = filename + ".png";
+          link.href = canvas.toDataURL("image/png");
+          link.click();
+
+          await new Promise((r) => setTimeout(r, 300));
         }
-
-        if (logo) {
-          const logoSize = canvas.width * 0.2;
-          const x = (canvas.width - logoSize) / 2;
-          const y = (canvas.height - logoSize) / 2;
-          const cropSize = Math.min(logo.width, logo.height);
-
-          ctx.fillStyle = "#fff";
-          ctx.fillRect(x, y, logoSize, logoSize);
-          ctx.drawImage(logo, (logo.width - cropSize) / 2, (logo.height - cropSize) / 2, cropSize, cropSize, x, y, logoSize, logoSize);
-        }
-
-        const link = document.createElement("a");
-        link.download = filename + ".png";
-        link.href = canvas.toDataURL("image/png");
-        link.click();
-
-        await new Promise((r) => setTimeout(r, 300));
       }
     }
 
@@ -175,7 +226,7 @@
       });
     }
 
-    window.onload = () => addEntry();
+    window.onload = () => addBatch();
   </script>
 </body>
 </html>
