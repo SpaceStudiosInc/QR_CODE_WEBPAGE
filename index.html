@@ -21,7 +21,7 @@
       font-size: 1rem;
     }
     textarea {
-      height: 200px;
+      height: 150px;
       padding: 1rem;
       border-radius: 6px;
       border: none;
@@ -61,6 +61,9 @@
   <label for="urls">Paste URLs (one per line):</label>
   <textarea id="urls" placeholder="https://example.com/page1&#10;https://example.com/page2"></textarea>
 
+  <label for="filenames">Custom Filenames (optional, one per line):</label>
+  <textarea id="filenames" placeholder="file1&#10;file2"></textarea>
+
   <button onclick="generateAll()">Generate & Download All</button>
 
   <canvas id="hiddenCanvas" width="1024" height="1024"></canvas>
@@ -71,6 +74,7 @@
       const ctx = canvas.getContext("2d");
 
       const urls = document.getElementById("urls").value.split("\n").map(u => u.trim()).filter(Boolean);
+      const filenames = document.getElementById("filenames").value.split("\n").map(f => f.trim());
       const fgColor = document.getElementById("fgColor").value;
       const bgColor = document.getElementById("bgColor").value;
       const logoFile = document.getElementById("logo").files[0];
@@ -78,7 +82,7 @@
 
       for (let i = 0; i < urls.length; i++) {
         const url = urls[i];
-        const filename = `qr_${i + 1}`;
+        const filename = filenames[i] || `qr_${i + 1}`;
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -107,7 +111,6 @@
           const x = (canvas.width - size) / 2;
           const y = (canvas.height - size) / 2;
           const crop = Math.min(logo.width, logo.height);
-
           ctx.fillStyle = bgColor;
           ctx.fillRect(x, y, size, size);
           ctx.drawImage(logo, (logo.width - crop) / 2, (logo.height - crop) / 2, crop, crop, x, y, size, size);
