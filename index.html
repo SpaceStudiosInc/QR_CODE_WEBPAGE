@@ -3,13 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Batch QR Generator</title>
+  <title>Dynamic Batch QR Generator</title>
   <script src="https://cdn.jsdelivr.net/npm/qrcode-generator/qrcode.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Able&display=swap" rel="stylesheet" />
   <style>
-    * {
-      box-sizing: border-box;
-    }
     body {
       font-family: 'Able', serif;
       background-color: #0b1e3f;
@@ -17,38 +14,33 @@
       text-align: center;
       padding: 1.5rem 1rem;
       margin: 0;
+      min-height: 100vh;
+      box-sizing: border-box;
     }
     h1 {
-      font-size: 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       margin-bottom: 1rem;
+      font-size: 2rem;
+      flex-wrap: wrap;
     }
-    .controls {
-      margin: 1rem auto;
-    }
-    button {
-      margin: 0.5rem;
-      padding: 0.8rem 1.6rem;
-      font-size: 1rem;
-      background-color: #1a3c70;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-    button:hover {
-      background-color: #2d5ca5;
+    .byline {
+      font-weight: normal;
+      font-size: 0.7em;
+      color: #ccc;
     }
     .batch-container {
       display: flex;
       flex-direction: column;
       gap: 2rem;
-      max-width: 1000px;
-      margin: 0 auto;
     }
     .batch {
       background: #0f2a50;
       border-radius: 12px;
       padding: 1rem;
+      max-width: 700px;
+      margin: 0 auto;
     }
     .qr-entry {
       background: #112b54;
@@ -56,53 +48,102 @@
       border-radius: 10px;
       margin-bottom: 1rem;
     }
-    label {
-      display: block;
-      margin: 0.5rem 0 0.2rem;
-      text-align: left;
-    }
-    input[type="text"],
-    input[type="file"],
-    input[type="color"],
+    .qr-entry input[type="text"],
+    .qr-entry input[type="file"],
+    .qr-entry input[type="color"],
     textarea {
       width: 100%;
+      margin: 0.5rem 0;
       padding: 0.6rem;
       font-size: 1rem;
       border-radius: 6px;
       border: none;
-      margin-bottom: 0.5rem;
+      box-sizing: border-box;
     }
-    .bulk-inputs {
-      display: flex;
+    .qr-entry label {
+      display: block;
+      margin-top: 0.5rem;
+      text-align: left;
+    }
+    .qr-entry input[type="checkbox"] {
+      margin-left: 0.5rem;
+    }
+    .controls {
+      margin: 1.5rem auto;
       flex-wrap: wrap;
-      gap: 1rem;
-      margin-bottom: 1rem;
     }
-    .bulk-inputs textarea {
-      flex: 1 1 45%;
-      height: 120px;
+    button {
+      margin: 0.5rem;
+      padding: 0.8rem 1.6rem;
+      font-size: 1.2rem;
+      background-color: #1a3c70;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.25s ease;
+    }
+    button:hover {
+      background-color: #2d5ca5;
     }
     canvas {
       display: none;
     }
+    #bulkModal {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.7);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    #bulkModalContent {
+      background: #0f2a50;
+      padding: 2rem;
+      border-radius: 12px;
+      max-width: 600px;
+      width: 90%;
+    }
+    #bulkModalContent textarea {
+      height: 200px;
+    }
   </style>
 </head>
 <body>
-  <h1>Batch QR Code Generator</h1>
+  <h1>
+    <span>Batch QR Code Generator</span>
+    <span class="byline">by SPACESTUDIOS</span>
+  </h1>
 
   <div class="controls">
     <button onclick="addBatch()">Add Batch</button>
     <button onclick="generateAll()">Generate & Download All</button>
+    <button onclick="exportConfig()">Export Config</button>
+    <input type="file" id="importFile" onchange="importConfig(event)" style="display: none;">
+    <button onclick="document.getElementById('importFile').click()">Import Config</button>
+    <button onclick="openBulkEntry()">Paste Multiple URLs</button>
   </div>
 
   <div id="batchContainer" class="batch-container"></div>
 
   <canvas id="hiddenCanvas" width="1024" height="1024"></canvas>
 
+  <!-- Bulk modal -->
+  <div id="bulkModal">
+    <div id="bulkModalContent">
+      <h3>Paste URLs (one per line)</h3>
+      <textarea id="bulkInput" placeholder="https://example.com/page1&#10;https://example.com/page2"></textarea>
+      <br />
+      <button onclick="submitBulk()">Add to New Batch</button>
+      <button onclick="closeBulkEntry()">Cancel</button>
+    </div>
+  </div>
+
   <script>
     let batchCount = 0;
 
-    function addBatch() {
+    function addBatch(batchData = null) {
       const batchContainer = document.getElementById('batchContainer');
       const batchDiv = document.createElement('div');
       batchDiv.className = 'batch';
@@ -117,51 +158,43 @@
           <label>QR Background Color:</label>
           <input type="color" name="bgColor" value="#ffffff" />
         </div>
-        <div class="bulk-inputs">
-          <div>
-            <label>Paste URLs (one per line):</label>
-            <textarea class="url-list" placeholder="https://example.com/page1"></textarea>
-          </div>
-          <div>
-            <label>Paste Filenames (matching order):</label>
-            <textarea class="filename-list" placeholder="Page1QR"></textarea>
-          </div>
-        </div>
-        <button onclick="parseBulkEntries(this)">Parse Entries</button>
         <div class="entries"></div>
+        <button onclick="addEntry(this)">Add QR Entry</button>
       `;
       batchContainer.appendChild(batchDiv);
+
+      if (batchData) {
+        batchDiv.querySelector('input[name="qrColor"]').value = batchData.qrColor;
+        batchDiv.querySelector('input[name="bgColor"]').value = batchData.bgColor;
+        batchDiv.querySelector('input[name="applyLogoToAll"]').checked = batchData.applyLogoToAll;
+        batchData.entries.forEach(entry => addEntry(batchDiv.querySelector('button'), entry));
+      } else {
+        addEntry(batchDiv.querySelector('button'));
+      }
       batchCount++;
     }
 
-    function parseBulkEntries(button) {
-      const batch = button.closest('.batch');
-      const urlLines = batch.querySelector('.url-list').value.trim().split('\n');
-      const filenameLines = batch.querySelector('.filename-list').value.trim().split('\n');
-      const entriesDiv = batch.querySelector('.entries');
+    function addEntry(button, entryData = null) {
+      const batchDiv = button.closest('.batch');
+      const entriesDiv = batchDiv.querySelector('.entries');
 
-      entriesDiv.innerHTML = '';
+      const entryDiv = document.createElement('div');
+      entryDiv.className = 'qr-entry';
+      entryDiv.innerHTML = `
+        <label>URL:</label>
+        <input type="text" name="url" placeholder="https://example.com" />
+        <label>Filename:</label>
+        <input type="text" name="filename" placeholder="filename" />
+        <label>Optional logo (overrides batch):</label>
+        <input type="file" accept="image/*" name="entryLogo" />
+      `;
 
-      for (let i = 0; i < urlLines.length; i++) {
-        const url = urlLines[i].trim();
-        const filename = filenameLines[i]?.trim() || `qr_${i + 1}`;
-        if (!url) continue;
+      entriesDiv.appendChild(entryDiv);
 
-        const entryDiv = document.createElement('div');
-        entryDiv.className = 'qr-entry';
-        entryDiv.innerHTML = `
-          <label>URL:</label>
-          <input type="text" name="url" value="${url}" />
-          <label>Filename:</label>
-          <input type="text" name="filename" value="${filename}" />
-          <label>Optional logo (overrides batch):</label>
-          <input type="file" accept="image/*" name="entryLogo" />
-        `;
-        entriesDiv.appendChild(entryDiv);
+      if (entryData) {
+        entryDiv.querySelector('input[name="url"]').value = entryData.url;
+        entryDiv.querySelector('input[name="filename"]').value = entryData.filename;
       }
-
-      batch.querySelector('.url-list').value = '';
-      batch.querySelector('.filename-list').value = '';
     }
 
     async function generateAll() {
@@ -182,13 +215,9 @@
         }
 
         for (const entry of entries) {
-          const urlInput = entry.querySelector('input[name="url"]');
-          const filenameInput = entry.querySelector('input[name="filename"]');
-          if (!urlInput || !filenameInput) continue;
-
-          const url = urlInput.value.trim();
-          const filename = filenameInput.value.trim() || 'qr';
-          const entryLogoFile = entry.querySelector('input[name="entryLogo"]')?.files[0];
+          const url = entry.querySelector('input[name="url"]').value.trim();
+          const filename = entry.querySelector('input[name="filename"]').value.trim() || 'qr';
+          const entryLogoFile = entry.querySelector('input[name="entryLogo"]').files[0];
 
           if (!url) continue;
 
@@ -237,6 +266,45 @@
       }
     }
 
+    function exportConfig() {
+      const data = [];
+      const batches = document.querySelectorAll('.batch');
+      batches.forEach(batch => {
+        const qrColor = batch.querySelector('input[name="qrColor"]').value;
+        const bgColor = batch.querySelector('input[name="bgColor"]').value;
+        const applyLogoToAll = batch.querySelector('input[name="applyLogoToAll"]').checked;
+        const entries = batch.querySelectorAll('.entries .qr-entry');
+        const entryData = [...entries].map(e => ({
+          url: e.querySelector('input[name="url"]').value,
+          filename: e.querySelector('input[name="filename"]').value
+        }));
+        data.push({ qrColor, bgColor, applyLogoToAll, entries: entryData });
+      });
+
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'qr-config.json';
+      a.click();
+    }
+
+    function importConfig(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const data = JSON.parse(reader.result);
+          document.getElementById('batchContainer').innerHTML = '';
+          batchCount = 0;
+          data.forEach(batch => addBatch(batch));
+        } catch (e) {
+          alert('Invalid configuration file.');
+        }
+      };
+      reader.readAsText(file);
+    }
+
     function loadImage(file) {
       return new Promise((resolve) => {
         const reader = new FileReader();
@@ -247,6 +315,29 @@
         };
         reader.readAsDataURL(file);
       });
+    }
+
+    function openBulkEntry() {
+      document.getElementById('bulkModal').style.display = 'flex';
+    }
+
+    function closeBulkEntry() {
+      document.getElementById('bulkModal').style.display = 'none';
+    }
+
+    function submitBulk() {
+      const urls = document.getElementById('bulkInput').value.split('\n').map(u => u.trim()).filter(u => u);
+      if (!urls.length) return closeBulkEntry();
+
+      addBatch();
+      const lastBatch = document.querySelector('.batch:last-child .entries');
+      urls.forEach((url, i) => {
+        const filename = `qr_${i + 1}`;
+        addEntry({ closest: () => document.querySelector('.batch:last-child') }, { url, filename });
+      });
+
+      document.getElementById('bulkInput').value = '';
+      closeBulkEntry();
     }
 
     window.onload = () => addBatch();
