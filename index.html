@@ -3,10 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Dynamic Batch QR Generator</title>
+  <title>Batch QR Generator</title>
   <script src="https://cdn.jsdelivr.net/npm/qrcode-generator/qrcode.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Able&display=swap" rel="stylesheet" />
   <style>
+    * {
+      box-sizing: border-box;
+    }
     body {
       font-family: 'Able', serif;
       background-color: #0b1e3f;
@@ -14,33 +17,38 @@
       text-align: center;
       padding: 1.5rem 1rem;
       margin: 0;
-      min-height: 100vh;
-      box-sizing: border-box;
     }
     h1 {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 1rem;
       font-size: 2rem;
-      flex-wrap: wrap;
+      margin-bottom: 1rem;
     }
-    .byline {
-      font-weight: normal;
-      font-size: 0.7em;
-      color: #ccc;
+    .controls {
+      margin: 1rem auto;
+    }
+    button {
+      margin: 0.5rem;
+      padding: 0.8rem 1.6rem;
+      font-size: 1rem;
+      background-color: #1a3c70;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #2d5ca5;
     }
     .batch-container {
       display: flex;
       flex-direction: column;
       gap: 2rem;
+      max-width: 1000px;
+      margin: 0 auto;
     }
     .batch {
       background: #0f2a50;
       border-radius: 12px;
       padding: 1rem;
-      max-width: 700px;
-      margin: 0 auto;
     }
     .qr-entry {
       background: #112b54;
@@ -48,42 +56,31 @@
       border-radius: 10px;
       margin-bottom: 1rem;
     }
-    .qr-entry input[type="text"],
-    .qr-entry input[type="file"],
-    .qr-entry input[type="color"],
+    label {
+      display: block;
+      margin: 0.5rem 0 0.2rem;
+      text-align: left;
+    }
+    input[type="text"],
+    input[type="file"],
+    input[type="color"],
     textarea {
       width: 100%;
-      margin: 0.5rem 0;
       padding: 0.6rem;
       font-size: 1rem;
       border-radius: 6px;
       border: none;
-      box-sizing: border-box;
+      margin-bottom: 0.5rem;
     }
-    .qr-entry label {
-      display: block;
-      margin-top: 0.5rem;
-      text-align: left;
+    .bulk-inputs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 1rem;
     }
-    .qr-entry input[type="checkbox"] {
-      margin-left: 0.5rem;
-    }
-    .controls {
-      margin: 1.5rem auto;
-    }
-    button {
-      margin: 0.5rem;
-      padding: 0.8rem 1.6rem;
-      font-size: 1.2rem;
-      background-color: #1a3c70;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: background-color 0.25s ease;
-    }
-    button:hover {
-      background-color: #2d5ca5;
+    .bulk-inputs textarea {
+      flex: 1 1 45%;
+      height: 120px;
     }
     canvas {
       display: none;
@@ -91,9 +88,7 @@
   </style>
 </head>
 <body>
-  <h1>
-    Batch QR Code Generator by SPACESTUDIOS
-  </h1>
+  <h1>Batch QR Code Generator</h1>
 
   <div class="controls">
     <button onclick="addBatch()">Add Batch</button>
@@ -122,43 +117,34 @@
           <label>QR Background Color:</label>
           <input type="color" name="bgColor" value="#ffffff" />
         </div>
-        <div class="bulk-input">
-          <label>Paste URLs and filenames (comma-separated, one per line):</label>
-          <textarea rows="5" placeholder="https://example.com, qr_filename"></textarea>
-          <button onclick="parseBulkEntries(this)">Parse Entries</button>
+        <div class="bulk-inputs">
+          <div>
+            <label>Paste URLs (one per line):</label>
+            <textarea class="url-list" placeholder="https://example.com/page1"></textarea>
+          </div>
+          <div>
+            <label>Paste Filenames (matching order):</label>
+            <textarea class="filename-list" placeholder="Page1QR"></textarea>
+          </div>
         </div>
+        <button onclick="parseBulkEntries(this)">Parse Entries</button>
         <div class="entries"></div>
-        <button onclick="addEntry(this)">Add QR Entry</button>
       `;
       batchContainer.appendChild(batchDiv);
       batchCount++;
     }
 
-    function addEntry(button) {
-      const batchDiv = button.closest('.batch');
-      const entriesDiv = batchDiv.querySelector('.entries');
-
-      const entryDiv = document.createElement('div');
-      entryDiv.className = 'qr-entry';
-      entryDiv.innerHTML = `
-        <label>URL:</label>
-        <input type="text" name="url" placeholder="https://example.com" />
-        <label>Filename:</label>
-        <input type="text" name="filename" placeholder="filename" />
-        <label>Optional logo (overrides batch):</label>
-        <input type="file" accept="image/*" name="entryLogo" />
-      `;
-      entriesDiv.appendChild(entryDiv);
-    }
-
     function parseBulkEntries(button) {
-      const batchDiv = button.closest('.batch');
-      const textarea = batchDiv.querySelector('textarea');
-      const lines = textarea.value.trim().split('\n');
-      const entriesDiv = batchDiv.querySelector('.entries');
+      const batch = button.closest('.batch');
+      const urlLines = batch.querySelector('.url-list').value.trim().split('\n');
+      const filenameLines = batch.querySelector('.filename-list').value.trim().split('\n');
+      const entriesDiv = batch.querySelector('.entries');
 
-      for (const line of lines) {
-        const [url, filename] = line.split(',').map(s => s.trim());
+      entriesDiv.innerHTML = '';
+
+      for (let i = 0; i < urlLines.length; i++) {
+        const url = urlLines[i].trim();
+        const filename = filenameLines[i]?.trim() || `qr_${i + 1}`;
         if (!url) continue;
 
         const entryDiv = document.createElement('div');
@@ -167,14 +153,15 @@
           <label>URL:</label>
           <input type="text" name="url" value="${url}" />
           <label>Filename:</label>
-          <input type="text" name="filename" value="${filename || 'qr'}" />
+          <input type="text" name="filename" value="${filename}" />
           <label>Optional logo (overrides batch):</label>
           <input type="file" accept="image/*" name="entryLogo" />
         `;
         entriesDiv.appendChild(entryDiv);
       }
 
-      textarea.value = '';
+      batch.querySelector('.url-list').value = '';
+      batch.querySelector('.filename-list').value = '';
     }
 
     async function generateAll() {
