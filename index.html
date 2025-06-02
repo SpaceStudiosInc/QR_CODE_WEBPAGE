@@ -5,23 +5,244 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Enhanced QR Code Generator</title>
   <script src="https://cdn.jsdelivr.net/npm/qrcode-generator/qrcode.min.js"></script>
-  <script src="https://cdn.tailwindcss.com"></script>
   <style>
+    /* Generated Tailwind CSS */
+    :root {
+      --color-gray-400: #9ca3af;
+      --color-gray-600: #4b5563;
+      --color-gray-700: #374151;
+      --color-gray-800: #1f2937;
+      --color-gray-900: #111827;
+      --color-blue-400: #60a5fa;
+      --color-blue-500: #3b82f6;
+      --color-blue-600: #2563eb;
+      --color-blue-700: #1d4ed8;
+      --color-purple-500: #a855f7;
+      --color-purple-600: #9333ea;
+      --color-purple-700: #7e22ce;
+    }
+    *, ::before, ::after {
+      box-sizing: border-box;
+    }
     body {
-      -webkit-tap-highlight-color: transparent;
+      margin: 0;
       font-family: 'Inter', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      background-image: linear-gradient(to bottom right, var(--color-gray-900), var(--color-gray-800));
+      color: #ffffff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 1rem;
+    }
+    @media (min-width: 640px) {
+      body {
+        padding: 1.5rem;
+      }
+    }
+    @media (min-width: 768px) {
+      body {
+        padding: 2rem;
+      }
+    }
+    .max-w-2xl {
+      max-width: 42rem;
+      width: 100%;
+    }
+    .bg-gray-800\/90 {
+      background-color: rgba(31, 41, 55, 0.9);
+    }
+    .backdrop-blur-sm {
+      backdrop-filter: blur(4px);
+    }
+    .rounded-2xl {
+      border-radius: 1rem;
+    }
+    .shadow-2xl {
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    }
+    .p-6 {
+      padding: 1.5rem;
+    }
+    @media (min-width: 640px) {
+      .sm\:p-8 {
+        padding: 2rem;
+      }
+    }
+    @media (min-width: 768px) {
+      .md\:p-10 {
+        padding: 2.5rem;
+      }
+    }
+    .text-3xl {
+      font-size: 1.875rem;
+      line-height: 2.25rem;
+    }
+    @media (min-width: 640px) {
+      .sm\:text-4xl {
+        font-size: 2.25rem;
+        line-height: 2.5rem;
+      }
+    }
+    .font-extrabold {
+      font-weight: 800;
+    }
+    .text-center {
+      text-align: center;
+    }
+    .mb-8 {
+      margin-bottom: 2rem;
+    }
+    .bg-clip-text {
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+    }
+    .bg-gradient-to-r {
+      background-image: linear-gradient(to right, var(--tw-gradient-stops));
+    }
+    .from-blue-400 {
+      --tw-gradient-from: var(--color-blue-400);
+      --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, transparent);
+    }
+    .to-purple-500 {
+      --tw-gradient-to: var(--color-purple-500);
+    }
+    .space-y-6 > :not([hidden]) ~ :not([hidden]) {
+      margin-top: 1.5rem;
+    }
+    .block {
+      display: block;
+    }
+    .text-sm {
+      font-size: 0.875rem;
+      line-height: 1.25rem;
+    }
+    .font-medium {
+      font-weight: 500;
+    }
+    .mb-2 {
+      margin-bottom: 0.5rem;
     }
     select, input[type="color"], textarea, input[type="range"] {
       -webkit-appearance: none;
       -moz-appearance: none;
       appearance: none;
     }
+    .w-full {
+      width: 100%;
+    }
+    .p-3 {
+      padding: 0.75rem;
+    }
+    .bg-gray-700\/50 {
+      background-color: rgba(55, 65, 81, 0.5);
+    }
+    .rounded-xl {
+      border-radius: 0.75rem;
+    }
+    .text-white {
+      color: #ffffff;
+    }
+    .border {
+      border-width: 1px;
+    }
+    .border-gray-600 {
+      border-color: var(--color-gray-600);
+    }
+    .focus\:outline-none:focus {
+      outline: 2px solid transparent;
+      outline-offset: 2px;
+    }
+    .focus\:ring-2:focus {
+      box-shadow: 0 0 0 2px var(--color-blue-500);
+    }
+    .transition-all {
+      transition-property: all;
+      transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+      transition-duration: 150ms;
+    }
+    .duration-200 {
+      transition-duration: 200ms;
+    }
+    .grid {
+      display: grid;
+    }
+    .grid-cols-1 {
+      grid-template-columns: repeat(1, minmax(0, 1fr));
+    }
+    @media (min-width: 640px) {
+      .sm\:grid-cols-2 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+    .gap-4 {
+      gap: 1rem;
+    }
+    .h-10 {
+      height: 2.5rem;
+    }
+    .cursor-pointer {
+      cursor: pointer;
+    }
+    .p-1 {
+      padding: 0.25rem;
+    }
     input[type="file"] {
       font-size: 0.875rem;
     }
+    input[type="file"]::file-selector-button {
+      margin-right: 1rem;
+      padding-top: 0.5rem;
+      padding-bottom: 0.5rem;
+      padding-left: 1rem;
+      padding-right: 1rem;
+      border-radius: 0.5rem;
+      border-width: 0;
+      background-color: var(--color-blue-600);
+      color: #ffffff;
+    }
+    input[type="file"]::file-selector-button:hover {
+      background-color: var(--color-blue-700);
+    }
     input[type="range"] {
       width: 100%;
-      accent-color: #3b82f6;
+      accent-color: var(--color-blue-500);
+    }
+    .text-gray-400 {
+      color: var(--color-gray-400);
+    }
+    .py-3 {
+      padding-top: 0.75rem;
+      padding-bottom: 0.75rem;
+    }
+    .bg-gradient-to-r.from-blue-600 {
+      --tw-gradient-from: var(--color-blue-600);
+      --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, transparent);
+    }
+    .bg-gradient-to-r.to-purple-600 {
+      --tw-gradient-to: var(--color-purple-600);
+    }
+    .hover\:from-blue-700:hover {
+      --tw-gradient-from: var(--color-blue-700);
+      --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, transparent);
+    }
+    .hover\:to-purple-700:hover {
+      --tw-gradient-to: var(--color-purple-700);
+    }
+    .font-semibold {
+      font-weight: 600;
+    }
+    .shadow-lg {
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+    .hover\:shadow-xl:hover {
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+    .hidden {
+      display: none;
     }
     @media (max-width: 640px) {
       h1 {
@@ -37,7 +258,7 @@
     }
   </style>
 </head>
-<body class="bg-gradient-to-br from-gray-900 to-gray-800 text-white min-h-screen flex flex-col items-center justify-start p-4 sm:p-6 md:p-8">
+<body>
   <div class="w-full max-w-2xl bg-gray-800/90 backdrop-blur-sm rounded-2xl shadow-2xl p-6 sm:p-8 md:p-10">
     <h1 class="text-3xl sm:text-4xl font-extrabold text-center mb-8 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">QR Code Generator</h1>
 
@@ -61,7 +282,7 @@
       </div>
 
       <div>
-        <label for="pattern" class="block text-sm font-medium mb-2">QR Pattern</label>
+        <label for="pattern" class="block text-sm font-medium mb-2">QR Pattern (Inner Modules)</label>
         <select id="pattern" class="w-full p-3 bg-gray-700/50 rounded-xl text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200">
           <option value="square">Squares</option>
           <option value="circle">Circles</option>
@@ -160,6 +381,14 @@
     });
     updateInputFields();
 
+    function isFinderPattern(r, c, count) {
+      return (
+        (r < 7 && c < 7) || // Top-left
+        (r < 7 && c >= count - 7) || // Top-right
+        (r >= count - 7 && c < 7) // Bottom-left
+      );
+    }
+
     async function generateAll() {
       const canvas = document.getElementById("hiddenCanvas");
       const ctx = canvas.getContext("2d");
@@ -239,42 +468,46 @@
               const x = offset + c * cellSize * scale;
               const y = offset + r * cellSize * scale;
               const size = cellSize * scale;
-              if (pattern === "circle") {
-                ctx.beginPath();
-                ctx.arc(x + size / 2, y + size / 2, size / 2 * 0.8, 0, Math.PI * 2);
-                ctx.fill();
-              } else if (pattern === "rounded_square") {
-                ctx.beginPath();
-                ctx.roundRect(x + size * 0.1, y + size * 0.1, size * 0.8, size * 0.8, size * 0.2);
-                ctx.fill();
-              } else if (pattern === "diamond") {
-                ctx.beginPath();
-                ctx.moveTo(x + size / 2, y);
-                ctx.lineTo(x + size, y + size / 2);
-                ctx.lineTo(x + size / 2, y + size);
-                ctx.lineTo(x, y + size / 2);
-                ctx.closePath();
-                ctx.fill();
-              } else if (pattern === "rounded_dash") {
-                ctx.beginPath();
-                ctx.roundRect(x + size * 0.25, y + size * 0.25, size * 0.5, size * 0.3, size * 0.15);
-                ctx.fill();
-              } else if (pattern === "star") {
-                ctx.beginPath();
-                const spikes = 4;
-                const outerRadius = size / 2 * 0.8;
-                const innerRadius = outerRadius * 0.4;
-                const cx = x + size / 2;
-                const cy = y + size / 2;
-                for (let i = 0; i < spikes * 2; i++) {
-                  const radius = i % 2 === 0 ? outerRadius : innerRadius;
-                  const angle = (i * Math.PI) / spikes - Math.PI / 2;
-                  ctx.lineTo(cx + radius * Math.cos(angle), cy + radius * Math.sin(angle));
-                }
-                ctx.closePath();
-                ctx.fill();
-              } else {
+              if (isFinderPattern(r, c, count)) {
                 ctx.fillRect(x, y, size, size);
+              } else {
+                if (pattern === "circle") {
+                  ctx.beginPath();
+                  ctx.arc(x + size / 2, y + size / 2, size / 2 * 0.8, 0, Math.PI * 2);
+                  ctx.fill();
+                } else if (pattern === "rounded_square") {
+                  ctx.beginPath();
+                  ctx.roundRect(x + size * 0.1, y + size * 0.1, size * 0.8, size * 0.8, size * 0.2);
+                  ctx.fill();
+                } else if (pattern === "diamond") {
+                  ctx.beginPath();
+                  ctx.moveTo(x + size / 2, y);
+                  ctx.lineTo(x + size, y + size / 2);
+                  ctx.lineTo(x + size / 2, y + size);
+                 burged
+                  ctx.closePath();
+                  ctx.fill();
+                } else if (pattern === "rounded_dash") {
+                  ctx.beginPath();
+                  ctx.roundRect(x + size * 0.25, y + size * 0.25, size * 0.5, size * 0.3, size * 0.15);
+                  ctx.fill();
+                } else if (pattern === "star") {
+                  ctx.beginPath();
+                  const spikes = 4;
+                  const outerRadius = size / 2 * 0.8;
+                  const innerRadius = outerRadius * 0.4;
+                  const cx = x + size / 2;
+                  const cy = y + size / 2;
+                  for (let i = 0; i < spikes * 2; i++) {
+                    const radius = i % 2 === 0 ? outerRadius : innerRadius;
+                    const angle = (i * Math.PI) / spikes - Math.PI / 2;
+                    ctx.lineTo(cx + radius * Math.cos(angle), cy + radius * Math.sin(angle));
+                  }
+                  ctx.closePath();
+                  ctx.fill();
+                } else {
+                  ctx.fillRect(x, y, size, size);
+                }
               }
             }
           }
@@ -329,29 +562,33 @@
             const x = offset + c * cellSize * scale;
             const y = offset + r * cellSize * scale;
             const size = cellSize * scale;
-            if (pattern === "circle") {
-              svg += `<circle cx="${x + size / 2}" cy="${y + size / 2}" r="${size / 2 * 0.8}" fill="${fgColor}"/>`;
-            } else if (pattern === "rounded_square") {
-              svg += `<rect x="${x + size * 0.1}" y="${y + size * 0.1}" width="${size * 0.8}" height="${size * 0.8}" rx="${size * 0.2}" fill="${fgColor}"/>`;
-            } else if (pattern === "diamond") {
-              svg += `<polygon points="${x + size / 2},${y} ${x + size},${y + size / 2} ${x + size / 2},${y + size} ${x},${y + size / 2}" fill="${fgColor}"/>`;
-            } else if (pattern === "rounded_dash") {
-              svg += `<rect x="${x + size * 0.25}" y="${y + size * 0.25}" width="${size * 0.5}" height="${size * 0.3}" rx="${size * 0.15}" fill="${fgColor}"/>`;
-            } else if (pattern === "star") {
-              const spikes = 4;
-              const outerRadius = size / 2 * 0.8;
-              const innerRadius = outerRadius * 0.4;
-              const cx = x + size / 2;
-              const cy = y + size / 2;
-              let points = "";
-              for (let i = 0; i < spikes * 2; i++) {
-                const radius = i % 2 === 0 ? outerRadius : innerRadius;
-                const angle = (i * Math.PI) / spikes - Math.PI / 2;
-                points += `${cx + radius * Math.cos(angle)},${cy + radius * Math.sin(angle)} `;
-              }
-              svg += `<polygon points="${points.trim()}" fill="${fgColor}"/>`;
-            } else {
+            if (isFinderPattern(r, c, count)) {
               svg += `<rect x="${x}" y="${y}" width="${size}" height="${size}" fill="${fgColor}"/>`;
+            } else {
+              if (pattern === "circle") {
+                svg += `<circle cx="${x + size / 2}" cy="${y + size / 2}" r="${size / 2 * 0.8}" fill="${fgColor}"/>`;
+              } else if (pattern === "rounded_square") {
+                svg += `<rect x="${x + size * 0.1}" y="${y + size * 0.1}" width="${size * 0.8}" height="${size * 0.8}" rx="${size * 0.2}" fill="${fgColor}"/>`;
+              } else if (pattern === "diamond") {
+                svg += `<polygon points="${x + size / 2},${y} ${x + size},${y + size / 2} ${x + size / 2},${y + size} ${x},${y + size / 2}" fill="${fgColor}"/>`;
+              } else if (pattern === "rounded_dash") {
+                svg += `<rect x="${x + size * 0.25}" y="${y + size * 0.25}" width="${size * 0.5}" height="${size * 0.3}" rx="${size * 0.15}" fill="${fgColor}"/>`;
+              } else if (pattern === "star") {
+                const spikes = 4;
+                const outerRadius = size / 2 * 0.8;
+                const innerRadius = outerRadius * 0.4;
+                const cx = x + size / 2;
+                const cy = y + size / 2;
+                let points = "";
+                for (let i = 0; i < spikes * 2; i++) {
+                  const radius = i % 2 === 0 ? outerRadius : innerRadius;
+                  const angle = (i * Math.PI) / spikes - Math.PI / 2;
+                  points += `${cx + radius * Math.cos(angle)},${cy + radius * Math.sin(angle)} `;
+                }
+                svg += `<polygon points="${points.trim()}" fill="${fgColor}"/>`;
+              } else {
+                svg += `<rect x="${x}" y="${y}" width="${size}" height="${size}" fill="${fgColor}"/>`;
+              }
             }
           }
         }
