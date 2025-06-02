@@ -3,15 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Advanced QR Code Generator</title>
+  <title>Enhanced QR Code Generator</title>
   <script src="https://cdn.jsdelivr.net/npm/qrcode-generator/qrcode.min.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    /* Custom styles for better mobile/tablet experience */
     body {
       -webkit-tap-highlight-color: transparent;
+      font-family: 'Inter', sans-serif;
     }
-    select, input[type="color"], textarea {
+    select, input[type="color"], textarea, input[type="range"] {
       -webkit-appearance: none;
       -moz-appearance: none;
       appearance: none;
@@ -19,82 +19,114 @@
     input[type="file"] {
       font-size: 0.875rem;
     }
+    input[type="range"] {
+      width: 100%;
+      accent-color: #3b82f6;
+    }
     @media (max-width: 640px) {
       h1 {
-        font-size: 1.5rem;
+        font-size: 1.75rem;
       }
       label {
         font-size: 0.875rem;
       }
       button {
-        font-size: 1rem;
-        padding: 0.75rem;
+        font-size: 0.875rem;
+        padding: 0.5rem;
       }
     }
   </style>
 </head>
-<body class="bg-gray-900 text-white min-h-screen flex flex-col items-center justify-start p-4 sm:p-6 md:p-8">
-  <div class="w-full max-w-lg bg-gray-800 rounded-2xl shadow-xl p-4 sm:p-6 md:p-8">
-    <h1 class="text-2xl sm:text-3xl font-bold text-center mb-6">QR Code Generator</h1>
+<body class="bg-gradient-to-br from-gray-900 to-gray-800 text-white min-h-screen flex flex-col items-center justify-start p-4 sm:p-6 md:p-8">
+  <div class="w-full max-w-2xl bg-gray-800/90 backdrop-blur-sm rounded-2xl shadow-2xl p-6 sm:p-8 md:p-10">
+    <h1 class="text-3xl sm:text-4xl font-extrabold text-center mb-8 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">QR Code Generator</h1>
 
-    <div class="space-y-4">
+    <div class="space-y-6">
       <div>
-        <label for="qrType" class="block text-sm font-medium mb-1 sm:mb-2">QR Code Type</label>
-        <select id="qrType" class="w-full p-2 sm:p-3 bg-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base">
+        <label for="qrType" class="block text-sm font-medium mb-2">QR Code Type</label>
+        <select id="qrType" class="w-full p-3 bg-gray-700/50 rounded-xl text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200">
           <option value="url">URL</option>
           <option value="text">Text</option>
           <option value="email">Email</option>
           <option value="phone">Phone</option>
           <option value="sms">SMS</option>
           <option value="wifi">Wi-Fi</option>
+          <option value="vcard">vCard</option>
         </select>
       </div>
 
       <div id="inputFields">
-        <label for="content" class="block text-sm font-medium mb-1 sm:mb-2">Content</label>
-        <textarea id="content" class="w-full p-2 sm:p-3 bg-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base" rows="4" placeholder="Enter content (one per line for batch)"></textarea>
+        <label for="content" class="block text-sm font-medium mb-2">Content</label>
+        <textarea id="content" class="w-full p-3 bg-gray-700/50 rounded-xl text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200" rows="5" placeholder="Enter content (one per line for batch)"></textarea>
       </div>
 
       <div>
-        <label for="pattern" class="block text-sm font-medium mb-1 sm:mb-2">QR Pattern</label>
-        <select id="pattern" class="w-full p-2 sm:p-3 bg-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base">
+        <label for="pattern" class="block text-sm font-medium mb-2">QR Pattern</label>
+        <select id="pattern" class="w-full p-3 bg-gray-700/50 rounded-xl text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200">
           <option value="square">Squares</option>
           <option value="dot">Dots</option>
           <option value="rounded">Rounded Squares</option>
+          <option value="dash">Dashes</option>
         </select>
       </div>
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+      <div>
+        <label for="errorCorrection" class="block text-sm font-medium mb-2">Error Correction Level</label>
+        <select id="errorCorrection" class="w-full p-3 bg-gray-700/50 rounded-xl text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200">
+          <option value="L">Low (7%)</option>
+          <option value="M" selected>Medium (15%)</option>
+          <option value="Q">Quartile (25%)</option>
+          <option value="H">High (30%)</option>
+        </select>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label for="fgColor" class="block text-sm font-medium mb-1 sm:mb-2">Foreground Color</label>
-          <input type="color" id="fgColor" value="#000000" class="w-full h-8 sm:h-10 bg-gray-700 rounded-lg cursor-pointer" />
+          <label for="fgColor" class="block text-sm font-medium mb-2">Foreground Color</label>
+          <input type="color" id="fgColor" value="#000000" class="w-full h-10 bg-gray-700/50 rounded-xl border border-gray-600 cursor-pointer p-1" />
         </div>
         <div>
-          <label for="bgColor" class="block text-sm font-medium mb-1 sm:mb-2">Background Color</label>
-          <input type="color" id="bgColor" value="#ffffff" class="w-full h-8 sm:h-10 bg-gray-700 rounded-lg cursor-pointer" />
+          <label for="bgColor" class="block text-sm font-medium mb-2">Background Color</label>
+          <input type="color" id="bgColor" value="#ffffff" class="w-full h-10 bg-gray-700/50 rounded-xl border border-gray-600 cursor-pointer p-1" />
         </div>
       </div>
 
       <div>
-        <label for="logo" class="block text-sm font-medium mb-1 sm:mb-2">Logo (optional)</label>
-        <input type="file" id="logo" accept="image/*" class="w-full p-2 sm:p-3 bg-gray-700 rounded-lg text-white text-sm sm:text-base file:mr-4 file:py-1 file:px-2 file:rounded-lg file:border-0 file:bg-blue-600 file:text-white file:hover:bg-blue-700" />
+        <label for="margin" class="block text-sm font-medium mb-2">Margin Size</label>
+        <input type="range" id="margin" min="0" max="20" value="4" class="w-full" />
+        <span id="marginValue" class="text-sm text-gray-400">4</span>
       </div>
 
       <div>
-        <label for="frame" class="block text-sm font-medium mb-1 sm:mb-2">Frame (optional)</label>
-        <select id="frame" class="w-full p-2 sm:p-3 bg-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base">
+        <label for="logo" class="block text-sm font-medium mb-2">Logo (optional)</label>
+        <input type="file" id="logo" accept="image/*" class="w-full p-3 bg-gray-700/50 rounded-xl text-white border border-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-600 file:text-white file:hover:bg-blue-700 transition-all duration-200" />
+      </div>
+
+      <div>
+        <label for="frame" class="block text-sm font-medium mb-2">Frame Style</label>
+        <select id="frame" class="w-full p-3 bg-gray-700/50 rounded-xl text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200">
           <option value="none">None</option>
           <option value="border">Simple Border</option>
           <option value="rounded">Rounded Border</option>
+          <option value="banner">Banner Frame</option>
         </select>
       </div>
 
       <div>
-        <label for="filenames" class="block text-sm font-medium mb-1 sm:mb-2">Custom Filenames (optional, one per line)</label>
-        <textarea id="filenames" class="w-full p-2 sm:p-3 bg-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base" rows="4" placeholder="file1\nfile2"></textarea>
+        <label for="exportFormat" class="block text-sm font-medium mb-2">Export Format</label>
+        <select id="exportFormat" class="w-full p-3 bg-gray-700/50 rounded-xl text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200">
+          <option value="png">PNG</option>
+          <option value="jpeg">JPEG</option>
+          <option value="svg">SVG</option>
+        </select>
       </div>
 
-      <button onclick="generateAll()" class="w-full py-2 sm:py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-semibold transition-colors duration-200 text-sm sm:text-base">Generate & Download All</button>
+      <div>
+        <label for="filenames" class="block text-sm font-medium mb-2">Custom Filenames (optional, one per line)</label>
+        <textarea id="filenames" class="w-full p-3 bg-gray-700/50 rounded-xl text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200" rows="5" placeholder="file1\nfile2"></textarea>
+      </div>
+
+      <button onclick="generateAll()" class="w-full py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl">Generate & Download All</button>
     </div>
   </div>
 
@@ -112,14 +144,18 @@
         case "phone": placeholder = "tel:+1234567890\ntel:+0987654321"; break;
         case "sms": placeholder = "sms:+1234567890:Message\nsms:+0987654321:Another message"; break;
         case "wifi": placeholder = "WIFI:S:MyWiFi;P:password;T:WPA;;\nWIFI:S:AnotherWiFi;P:pass123;T:WPA;;"; break;
+        case "vcard": placeholder = "BEGIN:VCARD\nVERSION:3.0\nN:LastName;FirstName;;;\nTEL:+1234567890\nEMAIL:email@example.com\nEND:VCARD"; break;
       }
       inputFields.innerHTML = `
-        <label for="content" class="block text-sm font-medium mb-1 sm:mb-2">Content</label>
-        <textarea id="content" class="w-full p-2 sm:p-3 bg-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base" rows="4" placeholder="${placeholder}"></textarea>
+        <label for="content" class="block text-sm font-medium mb-2">Content</label>
+        <textarea id="content" class="w-full p-3 bg-gray-700/50 rounded-xl text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200" rows="5" placeholder="${placeholder}"></textarea>
       `;
     }
 
     document.getElementById("qrType").addEventListener("change", updateInputFields);
+    document.getElementById("margin").addEventListener("input", () => {
+      document.getElementById("marginValue").textContent = document.getElementById("margin").value;
+    });
     updateInputFields();
 
     async function generateAll() {
@@ -132,6 +168,9 @@
       const bgColor = document.getElementById("bgColor").value;
       const pattern = document.getElementById("pattern").value;
       const frame = document.getElementById("frame").value;
+      const margin = parseInt(document.getElementById("margin").value);
+      const exportFormat = document.getElementById("exportFormat").value;
+      const errorCorrection = document.getElementById("errorCorrection").value;
       const logoFile = document.getElementById("logo").files[0];
       const logo = logoFile ? await loadImage(logoFile) : null;
 
@@ -145,31 +184,49 @@
         } else if (qrType === "sms") {
           const [number, message] = data.replace("sms:", "").split(":").map(s => s.trim());
           data = `sms:${number}?body=${encodeURIComponent(message)}`;
+        } else if (qrType === "vcard") {
+          data = data.startsWith("BEGIN:VCARD") ? data : `BEGIN:VCARD\nVERSION:3.0\n${data}\nEND:VCARD`;
         }
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.fillStyle = bgColor;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        const qr = qrcode(0, 'H');
+        const qr = qrcode(0, errorCorrection);
         qr.addData(data);
         qr.make();
         const count = qr.getModuleCount();
-        const cellSize = 8;
-        const scale = 800 / (count * cellSize);
-        const offset = (canvas.width - count * cellSize * scale) / 2;
+        const cellSize = 10; // Increased for better quality
+        const marginSize = margin * cellSize;
+        const qrSize = count * cellSize;
+        const scale = (canvas.width - 2 * marginSize) / qrSize;
+        const offset = marginSize;
 
         if (frame !== "none") {
-          const frameSize = canvas.width * 0.9;
+          const frameSize = canvas.width * 0.95;
           const frameOffset = (canvas.width - frameSize) / 2;
           ctx.strokeStyle = fgColor;
-          ctx.lineWidth = 10;
+          ctx.lineWidth = 12;
+          ctx.fillStyle = bgColor;
           if (frame === "rounded") {
             ctx.beginPath();
-            ctx.roundRect(frameOffset, frameOffset, frameSize, frameSize, 20);
+            ctx.roundRect(frameOffset, frameOffset, frameSize, frameSize, 30);
+            ctx.fill();
             ctx.stroke();
+          } else if (frame === "banner") {
+            ctx.beginPath();
+            ctx.roundRect(frameOffset, frameOffset, frameSize, frameSize, 30);
+            ctx.fill();
+            ctx.stroke();
+            ctx.fillStyle = fgColor;
+            ctx.font = "bold 24px Inter";
+            ctx.textAlign = "center";
+            ctx.fillText("Scan Me", canvas.width / 2, frameOffset + frameSize + 40);
           } else {
-            ctx.strokeRect(frameOffset, frameOffset, frameSize, frameSize);
+            ctx.beginPath();
+            ctx.rect(frameOffset, frameOffset, frameSize, frameSize);
+            ctx.fill();
+            ctx.stroke();
           }
         }
 
@@ -179,14 +236,18 @@
             if (qr.isDark(r, c)) {
               const x = offset + c * cellSize * scale;
               const y = offset + r * cellSize * scale;
-              const size = cellSize * scale;
+              const size = cellSize * scale * 1.05; // Slight overlap to eliminate gaps
               if (pattern === "dot") {
                 ctx.beginPath();
-                ctx.arc(x + size / 2, y + size / 2, size / 2, 0, Math.PI * 2);
+                ctx.arc(x + size / 2, y + size / 2, size / 2.5, 0, Math.PI * 2);
                 ctx.fill();
               } else if (pattern === "rounded") {
                 ctx.beginPath();
-                ctx.roundRect(x, y, size, size, size * 0.2);
+                ctx.roundRect(x, y, size, size, size * 0.3);
+                ctx.fill();
+              } else if (pattern === "dash") {
+                ctx.beginPath();
+                ctx.roundRect(x, y, size, size / 3, size * 0.2);
                 ctx.fill();
               } else {
                 ctx.fillRect(x, y, size, size);
@@ -205,13 +266,73 @@
           ctx.drawImage(logo, (logo.width - crop) / 2, (logo.height - crop) / 2, crop, crop, logoX, logoY, logoSize, logoSize);
         }
 
+        let href;
+        if (exportFormat === "svg") {
+          href = await canvasToSvg(qr, count, cellSize, scale, offset, fgColor, bgColor, pattern, frame, logo, marginSize);
+        } else {
+          href = canvas.toDataURL(`image/${exportFormat}`);
+        }
+
         const link = document.createElement("a");
-        link.download = (filenames[i] || `qr_${qrType}_${i + 1}`) + ".png";
-        link.href = canvas.toDataURL("image/png");
+        link.download = (filenames[i] || `qr_${qrType}_${i + 1}.${exportFormat}`);
+        link.href = href;
         link.click();
 
         await new Promise(r => setTimeout(r, 300));
       }
+    }
+
+    async function canvasToSvg(qr, count, cellSize, scale, offset, fgColor, bgColor, pattern, frame, logo, marginSize) {
+      let svg = `<svg width="1024" height="1024" xmlns="http://www.w3.org/2000/svg">`;
+      svg += `<rect width="1024" height="1024" fill="${bgColor}"/>`;
+
+      if (frame !== "none") {
+        const frameSize = 1024 * 0.95;
+        const frameOffset = (1024 - frameSize) / 2;
+        if (frame === "rounded") {
+          svg += `<rect x="${frameOffset}" y="${frameOffset}" width="${frameSize}" height="${frameSize}" rx="30" fill="${bgColor}" stroke="${fgColor}" stroke-width="12"/>`;
+        } else if (frame === "banner") {
+          svg += `<rect x="${frameOffset}" y="${frameOffset}" width="${frameSize}" height="${frameSize}" rx="30" fill="${bgColor}" stroke="${fgColor}" stroke-width="12"/>`;
+          svg += `<text x="512" y="${frameOffset + frameSize + 40}" font-family="Inter, sans-serif" font-size="24" font-weight="bold" text-anchor="middle" fill="${fgColor}">Scan Me</text>`;
+        } else {
+          svg += `<rect x="${frameOffset}" y="${frameOffset}" width="${frameSize}" height="${frameSize}" fill="${bgColor}" stroke="${fgColor}" stroke-width="12"/>`;
+        }
+      }
+
+      for (let r = 0; r < count; r++) {
+        for (let c = 0; c < count; c++) {
+          if (qr.isDark(r, c)) {
+            const x = offset + c * cellSize * scale;
+            const y = offset + r * cellSize * scale;
+            const size = cellSize * scale * 1.05;
+            if (pattern === "dot") {
+              svg += `<circle cx="${x + size / 2}" cy="${y + size / 2}" r="${size / 2.5}" fill="${fgColor}"/>`;
+            } else if (pattern === "rounded") {
+              svg += `<rect x="${x}" y="${y}" width="${size}" height="${size}" rx="${size * 0.3}" fill="${fgColor}"/>`;
+            } else if (pattern === "dash") {
+              svg += `<rect x="${x}" y="${y}" width="${size}" height="${size / 3}" rx="${size * 0.2}" fill="${fgColor}"/>`;
+            } else {
+              svg += `<rect x="${x}" y="${y}" width="${size}" height="${size}" fill="${fgColor}"/>`;
+            }
+          }
+        }
+      }
+
+      if (logo) {
+        const logoSize = 1024 * 0.2;
+        const logoX = (1024 - logoSize) / 2;
+        const logoY = (1024 - logoSize) / 2;
+        const logoData = await new Promise(resolve => {
+          const reader = new FileReader();
+          reader.onload = e => resolve(e.target.result);
+          reader.readAsDataURL(logo);
+        });
+        svg += `<rect x="${logoX}" y="${logoY}" width="${logoSize}" height="${logoSize}" fill="${bgColor}"/>`;
+        svg += `<image x="${logoX}" y="${logoY}" width="${logoSize}" height="${logoSize}" href="${logoData}"/>`;
+      }
+
+      svg += `</svg>`;
+      return `data:image/svg+xml;base64,${btoa(svg)}`;
     }
 
     function loadImage(file) {
